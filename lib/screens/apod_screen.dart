@@ -164,7 +164,7 @@ class _APODScreenState extends State<APODScreen> {
         future: _apodFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Padding(
+            return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
