@@ -4,6 +4,9 @@ import '../services/apod_api_service.dart';
 import '../models/apod_data.dart';
 import 'settings_screen.dart';
 import '../services/settings_service.dart';
+import '../services/favourites_service.dart';
+import 'favourites_screen.dart';
+import 'full_screen_image_viewer.dart';
 
 class APODScreen extends StatefulWidget {
   final ThemeMode themeMode;
@@ -41,6 +44,7 @@ class _APODScreenState extends State<APODScreen> {
   bool _defaultToToday = true;
   bool _showCopyright = true;
   bool _showDescription = true;
+  bool _isFavourite = false;
 
   @override
   void initState() {
@@ -64,6 +68,28 @@ class _APODScreenState extends State<APODScreen> {
         _selectedDate = lastViewed;
         _apodFuture = ApodApiService().fetchApodData(date: lastViewed);
       });
+    }
+    _checkFavourite();
+  }
+
+  Future<void> _checkFavourite() async {
+    final date = _selectedDate ?? DateTime.now().toIso8601String().split('T').first;
+    final fav = await FavouritesService().isFavourite(date);
+    setState(() {
+      _isFavourite = fav;
+    });
+  }
+
+  Future<void> _toggleFavourite(ApodData apod) async {
+    final service = FavouritesService();
+    if (_isFavourite) {
+      await service.removeFavourite(apod.date);
+      setState(() => _isFavourite = false);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Removed from favourites')));
+    } else {
+      await service.addFavourite(apod);
+      setState(() => _isFavourite = true);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Added to favourites')));
     }
   }
 
@@ -245,6 +271,7 @@ class _APODScreenState extends State<APODScreen> {
             );
           } else if (snapshot.hasData) {
             final apod = snapshot.data!;
+            WidgetsBinding.instance.addPostFrameCallback((_) => _checkFavourite());
             final imageUrl = (_useHd && apod.hdUrl != null) ? apod.hdUrl! : apod.url;
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -253,21 +280,34 @@ class _APODScreenState extends State<APODScreen> {
                 children: [
                   if (apod.mediaType == 'image')
                     Center(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: SizedBox(
-                          height: 400,
-                          child: Hero(
-                            tag: 'apod-image',
-                            child: Image.network(
-                              imageUrl,
-                              fit: BoxFit.contain,
-                              loadingBuilder: (context, child, progress) {
-                                if (progress == null) return child;
-                                return const Center(child: CircularProgressIndicator());
-                              },
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Center(child: Icon(Icons.broken_image, size: 64)),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => FullScreenImageViewer(
+                                imageUrl: imageUrl,
+                                tag: 'apod-image',
+                              ),
+                            ),
+                          );
+                        },
+                        child: Hero(
+                          tag: 'apod-image',
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: SizedBox(
+                              height: 400,
+                              child: Image.network(
+                                imageUrl,
+                                fit: BoxFit.contain,
+                                loadingBuilder: (context, child, progress) {
+                                  if (progress == null) return child;
+                                  return const Center(child: CircularProgressIndicator());
+                                },
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Center(child: Icon(Icons.broken_image, size: 64)),
+                              ),
                             ),
                           ),
                         ),
@@ -285,11 +325,24 @@ class _APODScreenState extends State<APODScreen> {
                       ),
                     ),
                   const SizedBox(height: 16),
-                  Text(
-                    apod.title,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontSize: Theme.of(context).textTheme.headlineSmall!.fontSize! * widget.fontSizeFactor,
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          apod.title,
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontSize: Theme.of(context).textTheme.headlineSmall!.fontSize! * widget.fontSizeFactor,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(_isFavourite ? Icons.star : Icons.star_border),
+                        color: Theme.of(context).colorScheme.secondary,
+                        tooltip: _isFavourite ? 'Remove from favourites' : 'Add to favourites',
+                        onPressed: () => _toggleFavourite(apod),
+                      ),
+                    ],
                   ),
                   if (_showCopyright && apod.copyright != null)
                     Text(

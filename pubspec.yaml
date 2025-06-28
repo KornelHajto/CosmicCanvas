@@ -94,6 +94,7 @@ flutter:
 
   assets:
     - assets/Iosevka.ttf
+    - assets/cosmiccanvas.png
   fonts:
     - family: Iosevka
       fonts:

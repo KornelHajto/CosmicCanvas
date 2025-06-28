@@ -29,4 +29,16 @@ class ApodData {
       mediaType: json['media_type']
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'date': date,
+      'explanation': explanation,
+      'url': url,
+      'hdurl': hdUrl,
+      'copyright': copyright,
+      'media_type': mediaType,
+    };
+  }
 }

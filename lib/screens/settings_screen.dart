@@ -88,6 +88,13 @@ class SettingsScreen extends StatelessWidget {
             onChanged: onShowDescriptionChanged,
           ),
           ListTile(
+            leading: const Icon(Icons.star),
+            title: const Text('View Favourites'),
+            onTap: () {
+              Navigator.pushNamed(context, '/favourites');
+            },
+          ),
+          ListTile(
             leading: const Icon(Icons.info_outline),
             title: const Text('About / Info'),
             onTap: () {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/apod_screen.dart';
+import 'screens/favourites_screen.dart';
 import 'services/settings_service.dart';
 
 void main() {
@@ -94,18 +95,22 @@ class _CosmicCanvasAppState extends State<CosmicCanvasApp> {
         fontFamily: 'Raleway',
       ),
       themeMode: _themeMode,
-      home: APODScreen(
-        onThemeModeChanged: _setThemeMode,
-        themeMode: _themeMode,
-        fontSizeFactor: _fontSizeFactor,
-        onFontSizeChanged: _setFontSizeFactor,
-        defaultToToday: _defaultToToday,
-        onDefaultToTodayChanged: _setDefaultToToday,
-        showCopyright: _showCopyright,
-        onShowCopyrightChanged: _setShowCopyright,
-        showDescription: _showDescription,
-        onShowDescriptionChanged: _setShowDescription,
-      ),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => APODScreen(
+              themeMode: _themeMode,
+              onThemeModeChanged: (mode) => setState(() => _themeMode = mode),
+              fontSizeFactor: _fontSizeFactor,
+              onFontSizeChanged: (factor) => setState(() => _fontSizeFactor = factor),
+              defaultToToday: _defaultToToday,
+              onDefaultToTodayChanged: (val) => setState(() => _defaultToToday = val),
+              showCopyright: _showCopyright,
+              onShowCopyrightChanged: (val) => setState(() => _showCopyright = val),
+              showDescription: _showDescription,
+              onShowDescriptionChanged: (val) => setState(() => _showDescription = val),
+            ),
+        '/favourites': (context) => const FavouritesScreen(),
+      },
       debugShowCheckedModeBanner: false,
     );
   }
