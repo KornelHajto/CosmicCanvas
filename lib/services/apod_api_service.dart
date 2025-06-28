@@ -12,7 +12,6 @@ class ApodApiService {
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
-      print('APOD data fetched successfully: ${response.body}');
       return ApodData.fromJson(json.decode(response.body));
     } else {
       throw Exception('Failed to load APOD data');

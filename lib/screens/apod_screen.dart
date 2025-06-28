@@ -2,27 +2,68 @@ import 'package:flutter/material.dart';
 import '../services/apod_api_service.dart';
 import '../models/apod_data.dart';
 
-class APODScreen extends StatelessWidget {
+class APODScreen extends StatefulWidget {
   const APODScreen({super.key});
 
-  Future<ApodData> _fetchApod() {
-    return ApodApiService().fetchApodData();
+  @override
+  State<APODScreen> createState() => _APODScreenState();
+}
+
+class _APODScreenState extends State<APODScreen> {
+  late Future<ApodData> _apodFuture;
+  String? _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _apodFuture = ApodApiService().fetchApodData();
+  }
+
+  void _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate != null
+          ? DateTime.parse(_selectedDate!)
+          : DateTime.now(),
+      firstDate: DateTime(1995, 6, 16),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked.toIso8601String().split('T').first;
+        _apodFuture = ApodApiService().fetchApodData(date: _selectedDate);
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.calendar_today),
+          tooltip: 'Pick a date',
+          onPressed: _pickDate,
+        ),
         title: const Text('Cosmic Canvas'),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Settings',
+            onPressed: () {
+              // TODO: Implement settings navigation
+            },
+          ),
+        ],
       ),
       body: FutureBuilder<ApodData>(
-        future: _fetchApod(),
+        future: _apodFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(child: Text('Error: ${snapshot.error}'));
           } else if (snapshot.hasData) {
             final apod = snapshot.data!;
             return SingleChildScrollView(
@@ -35,16 +76,19 @@ class APODScreen extends StatelessWidget {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: SizedBox(
-                          height: 400, // Adjust as needed for your layout
-                          child: Image.network(
-                            apod.url,
-                            fit: BoxFit.contain, // Show the full image
-                            loadingBuilder: (context, child, progress) {
-                              if (progress == null) return child;
-                              return const Center(child: CircularProgressIndicator());
-                            },
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Center(child: Icon(Icons.broken_image, size: 64)),
+                          height: 400,
+                          child: Hero(
+                            tag: 'apod-image',
+                            child: Image.network(
+                              apod.url,
+                              fit: BoxFit.contain,
+                              loadingBuilder: (context, child, progress) {
+                                if (progress == null) return child;
+                                return const Center(child: CircularProgressIndicator());
+                              },
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Center(child: Icon(Icons.broken_image, size: 64)),
+                            ),
                           ),
                         ),
                       ),
@@ -55,7 +99,7 @@ class APODScreen extends StatelessWidget {
                       color: Colors.black26,
                       alignment: Alignment.center,
                       child: Text(
-                        'Video: ${apod.url}',
+                        'Video: ${apod.url}',
                         style: const TextStyle(color: Colors.blue),
                         textAlign: TextAlign.center,
                       ),
