@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsScreen extends StatelessWidget {
   final bool useHd;
@@ -86,7 +87,74 @@ class SettingsScreen extends StatelessWidget {
             value: showDescription,
             onChanged: onShowDescriptionChanged,
           ),
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text('About / Info'),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const AboutScreen(),
+                ),
+              );
+            },
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class AboutScreen extends StatefulWidget {
+  const AboutScreen({super.key});
+
+  @override
+  State<AboutScreen> createState() => _AboutScreenState();
+}
+
+class _AboutScreenState extends State<AboutScreen> {
+  String _version = '';
+  String _appName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPackageInfo();
+  }
+
+  Future<void> _loadPackageInfo() async {
+    final info = await PackageInfo.fromPlatform();
+    setState(() {
+      _version = info.version;
+      _appName = info.appName;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('About / Info')),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(_appName, style: Theme.of(context).textTheme.headlineSmall),
+            Text('Version: $_version'),
+            const SizedBox(height: 24),
+            const Text('Credits', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('• Data: NASA Astronomy Picture of the Day (APOD) API'),
+            const Text('• Built with Flutter'),
+            const Text('• Open-source packages: http, shared_preferences, shimmer, package_info_plus'),
+            const SizedBox(height: 24),
+            const Text('Contact', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('Kornél Hajtó'),
+            const Text('kornelhajto2004@gmail.com'),
+            const SizedBox(height: 24),
+            const Text('This app is not affiliated with NASA.'),
+          ],
+        ),
       ),
     );
   }

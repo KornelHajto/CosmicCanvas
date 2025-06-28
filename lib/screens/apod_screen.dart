@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 import '../services/apod_api_service.dart';
 import '../models/apod_data.dart';
 import 'settings_screen.dart';
@@ -132,6 +133,14 @@ class _APODScreenState extends State<APODScreen> {
     );
   }
 
+  void _retryLoad() {
+    setState(() {
+      _apodFuture = _selectedDate != null
+          ? ApodApiService().fetchApodData(date: _selectedDate)
+          : ApodApiService().fetchApodData();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -155,9 +164,85 @@ class _APODScreenState extends State<APODScreen> {
         future: _apodFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[800]!,
+                    highlightColor: Colors.grey[600]!,
+                    child: Container(
+                      height: 400,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[800],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[800]!,
+                    highlightColor: Colors.grey[600]!,
+                    child: Container(
+                      height: 32,
+                      color: Colors.grey[800],
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                    ),
+                  ),
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[800]!,
+                    highlightColor: Colors.grey[600]!,
+                    child: Container(
+                      height: 20,
+                      color: Colors.grey[800],
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[800]!,
+                    highlightColor: Colors.grey[600]!,
+                    child: Container(
+                      height: 80,
+                      color: Colors.grey[800],
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                    ),
+                  ),
+                ],
+              ),
+            );
           } else if (snapshot.hasError) {
-            return Center(child: Text('Error:  ${snapshot.error}'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red, size: 64),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Failed to load APOD.',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    snapshot.error.toString(),
+                    style: const TextStyle(color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                    onPressed: () {
+                      _retryLoad();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Retrying...')),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            );
           } else if (snapshot.hasData) {
             final apod = snapshot.data!;
             final imageUrl = (_useHd && apod.hdUrl != null) ? apod.hdUrl! : apod.url;
