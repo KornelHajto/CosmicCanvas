@@ -2,9 +2,32 @@ import 'package:flutter/material.dart';
 import '../services/apod_api_service.dart';
 import '../models/apod_data.dart';
 import 'settings_screen.dart';
+import '../services/settings_service.dart';
 
 class APODScreen extends StatefulWidget {
-  const APODScreen({super.key});
+  final ThemeMode themeMode;
+  final ValueChanged<ThemeMode> onThemeModeChanged;
+  final double fontSizeFactor;
+  final ValueChanged<double> onFontSizeChanged;
+  final bool defaultToToday;
+  final ValueChanged<bool> onDefaultToTodayChanged;
+  final bool showCopyright;
+  final ValueChanged<bool> onShowCopyrightChanged;
+  final bool showDescription;
+  final ValueChanged<bool> onShowDescriptionChanged;
+  const APODScreen({
+    super.key,
+    required this.themeMode,
+    required this.onThemeModeChanged,
+    required this.fontSizeFactor,
+    required this.onFontSizeChanged,
+    required this.defaultToToday,
+    required this.onDefaultToTodayChanged,
+    required this.showCopyright,
+    required this.onShowCopyrightChanged,
+    required this.showDescription,
+    required this.onShowDescriptionChanged,
+  });
 
   @override
   State<APODScreen> createState() => _APODScreenState();
@@ -14,11 +37,33 @@ class _APODScreenState extends State<APODScreen> {
   late Future<ApodData> _apodFuture;
   String? _selectedDate;
   bool _useHd = false;
+  bool _defaultToToday = true;
+  bool _showCopyright = true;
+  bool _showDescription = true;
 
   @override
   void initState() {
     super.initState();
-    _apodFuture = ApodApiService().fetchApodData();
+    _defaultToToday = widget.defaultToToday;
+    _showCopyright = widget.showCopyright;
+    _showDescription = widget.showDescription;
+    _loadInitialDate();
+  }
+
+  Future<void> _loadInitialDate() async {
+    final settings = SettingsService();
+    if (_defaultToToday) {
+      setState(() {
+        _selectedDate = null;
+        _apodFuture = ApodApiService().fetchApodData();
+      });
+    } else {
+      final lastViewed = await settings.getLastViewedDate();
+      setState(() {
+        _selectedDate = lastViewed;
+        _apodFuture = ApodApiService().fetchApodData(date: lastViewed);
+      });
+    }
   }
 
   void _pickDate() async {
@@ -31,10 +76,12 @@ class _APODScreenState extends State<APODScreen> {
       lastDate: DateTime.now(),
     );
     if (picked != null) {
+      final dateStr = picked.toIso8601String().split('T').first;
       setState(() {
-        _selectedDate = picked.toIso8601String().split('T').first;
-        _apodFuture = ApodApiService().fetchApodData(date: _selectedDate);
+        _selectedDate = dateStr;
+        _apodFuture = ApodApiService().fetchApodData(date: dateStr);
       });
+      await SettingsService().setLastViewedDate(dateStr);
     }
   }
 
@@ -48,6 +95,36 @@ class _APODScreenState extends State<APODScreen> {
             setState(() {
               _useHd = value;
             });
+            Navigator.pop(context);
+          },
+          themeMode: widget.themeMode,
+          onThemeModeChanged: widget.onThemeModeChanged,
+          fontSizeFactor: widget.fontSizeFactor,
+          onFontSizeChanged: widget.onFontSizeChanged,
+          defaultToToday: _defaultToToday,
+          onDefaultToTodayChanged: (value) async {
+            setState(() {
+              _defaultToToday = value;
+            });
+            await SettingsService().setDefaultToToday(value);
+            widget.onDefaultToTodayChanged(value);
+            Navigator.pop(context);
+            _loadInitialDate();
+          },
+          showCopyright: _showCopyright,
+          onShowCopyrightChanged: (value) async {
+            setState(() {
+              _showCopyright = value;
+            });
+            widget.onShowCopyrightChanged(value);
+            Navigator.pop(context);
+          },
+          showDescription: _showDescription,
+          onShowDescriptionChanged: (value) async {
+            setState(() {
+              _showDescription = value;
+            });
+            widget.onShowDescriptionChanged(value);
             Navigator.pop(context);
           },
         ),
@@ -125,14 +202,47 @@ class _APODScreenState extends State<APODScreen> {
                   const SizedBox(height: 16),
                   Text(
                     apod.title,
-                    style: Theme.of(context).textTheme.headlineSmall,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontSize: Theme.of(context).textTheme.headlineSmall!.fontSize! * widget.fontSizeFactor,
+                    ),
                   ),
+                  if (_showCopyright && apod.copyright != null)
+                    Text(
+                      '© ${apod.copyright}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontSize: Theme.of(context).textTheme.bodySmall!.fontSize! * widget.fontSizeFactor,
+                        fontStyle: FontStyle.italic,
+                        color: Colors.grey[400],
+                      ),
+                    ),
                   Text(
                     apod.date,
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontSize: Theme.of(context).textTheme.bodySmall!.fontSize! * widget.fontSizeFactor,
+                    ),
                   ),
                   const SizedBox(height: 16),
-                  Text(apod.explanation),
+                  ExpansionTile(
+                    title: Text(
+                      'Explanation',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontSize: Theme.of(context).textTheme.titleMedium!.fontSize! * widget.fontSizeFactor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    initiallyExpanded: _showDescription,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: Text(
+                          apod.explanation,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontSize: Theme.of(context).textTheme.bodyMedium!.fontSize! * widget.fontSizeFactor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             );
