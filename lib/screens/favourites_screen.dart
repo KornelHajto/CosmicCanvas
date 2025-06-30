@@ -4,7 +4,7 @@ import '../models/apod_data.dart';
 import '../services/apod_api_service.dart';
 
 class FavouritesScreen extends StatefulWidget {
-  const FavouritesScreen({Key? key}) : super(key: key);
+  const FavouritesScreen({super.key});
 
   @override
   State<FavouritesScreen> createState() => _FavouritesScreenState();

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class FullScreenImageViewer extends StatelessWidget {
   final String imageUrl;
   final String tag;
-  const FullScreenImageViewer({Key? key, required this.imageUrl, required this.tag}) : super(key: key);
+  const FullScreenImageViewer({super.key, required this.imageUrl, required this.tag});
 
   @override
   Widget build(BuildContext context) {

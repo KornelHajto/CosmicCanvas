@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 class ApodApiService {
   static const String _baseUrl = 'https://api.nasa.gov/planetary/apod';
   //TODO: Replace with actual API Key
-  static const String _apiKey = 'DEMO';
+  static const String _apiKey = 'DEMO_KEY';
 
   final http.Client client;
   ApodApiService({http.Client? client}) : client = client ?? http.Client();

@@ -5,7 +5,6 @@ import '../models/apod_data.dart';
 import 'settings_screen.dart';
 import '../services/settings_service.dart';
 import '../services/favourites_service.dart';
-import 'favourites_screen.dart';
 import 'full_screen_image_viewer.dart';
 
 class APODScreen extends StatefulWidget {
