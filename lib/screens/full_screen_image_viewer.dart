@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
+import '../services/share_service.dart';
+import '../models/apod_data.dart';
 
 class FullScreenImageViewer extends StatelessWidget {
   final String imageUrl;
   final String tag;
-  const FullScreenImageViewer({super.key, required this.imageUrl, required this.tag});
+  final ApodData? apod;
+  
+  const FullScreenImageViewer({
+    super.key, 
+    required this.imageUrl, 
+    required this.tag,
+    this.apod,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +45,16 @@ class FullScreenImageViewer extends StatelessWidget {
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
+              if (apod != null)
+                Positioned(
+                  bottom: 16,
+                  right: 16,
+                  child: FloatingActionButton(
+                    backgroundColor: Theme.of(context).colorScheme.secondary.withOpacity(0.7),
+                    child: const Icon(Icons.share, color: Colors.white),
+                    onPressed: () => ShareService().shareApod(apod!),
+                  ),
+                ),
             ],
           ),
         ),

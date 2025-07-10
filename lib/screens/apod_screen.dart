@@ -5,6 +5,7 @@ import '../models/apod_data.dart';
 import 'settings_screen.dart';
 import '../services/settings_service.dart';
 import '../services/favourites_service.dart';
+import '../services/share_service.dart';
 import 'full_screen_image_viewer.dart';
 
 class APODScreen extends StatefulWidget {
@@ -287,6 +288,7 @@ class _APODScreenState extends State<APODScreen> {
                               builder: (_) => FullScreenImageViewer(
                                 imageUrl: imageUrl,
                                 tag: 'apod-image',
+                                apod: apod,
                               ),
                             ),
                           );
@@ -340,6 +342,11 @@ class _APODScreenState extends State<APODScreen> {
                         color: Theme.of(context).colorScheme.secondary,
                         tooltip: _isFavourite ? 'Remove from favourites' : 'Add to favourites',
                         onPressed: () => _toggleFavourite(apod),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.share),
+                        tooltip: 'Share this APOD',
+                        onPressed: () => ShareService().shareApod(apod),
                       ),
                     ],
                   ),

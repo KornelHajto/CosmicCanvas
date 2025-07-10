@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/favourites_service.dart';
 import '../models/apod_data.dart';
-import '../services/apod_api_service.dart';
+import '../services/share_service.dart';
 
 class FavouritesScreen extends StatefulWidget {
   const FavouritesScreen({super.key});
@@ -51,9 +51,20 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                       : const Icon(Icons.image),
                   title: Text(apod.title),
                   subtitle: Text(apod.date),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () => _removeFavourite(apod.date),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.share),
+                        tooltip: 'Share',
+                        onPressed: () => ShareService().shareApod(apod),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete),
+                        tooltip: 'Remove from favourites',
+                        onPressed: () => _removeFavourite(apod.date),
+                      ),
+                    ],
                   ),
                   onTap: () async {
                     // Optionally, show APOD details here or navigate back to main screen with this date
